@@ -25,11 +25,11 @@ COMMENT ON TABLE categorias IS 'Tabela das categorias temáticas dos cursos.';
 
 CREATE TABLE cursos (
     id SERIAL PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
     descricao TEXT,
     categoria_id INTEGER NOT NULL REFERENCES categorias(id),
     instrutor_id INTEGER NOT NULL REFERENCES instrutores(id),
-    preco NUMERIC(10, 2) NOT NULL CHECK (preco >= 0),
+    preco NUMERIC(5, 2) NOT NULL CHECK (preco >= 0),
     carga_horaria INTEGER NOT NULL CHECK (carga_horaria > 0),
     nivel VARCHAR(20) NOT NULL CHECK (nivel IN ('iniciante', 'intermediario', 'avancado')),
     data_criacao TIMESTAMP NOT NULL DEFAULT NOW()
@@ -39,7 +39,7 @@ COMMENT ON TABLE cursos IS 'Tabela central dos cursos ofertados na plataforma.';
 CREATE TABLE modulos (
     id SERIAL PRIMARY KEY,
     curso_id INTEGER NOT NULL REFERENCES cursos(id),
-    titulo VARCHAR(200) NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
     ordem INTEGER NOT NULL,
     descricao TEXT,
     UNIQUE (curso_id, ordem)
@@ -49,7 +49,7 @@ COMMENT ON COLUMN modulos.ordem IS 'Ordem sequencial do módulo dentro do curso.
 CREATE TABLE aulas (
     id SERIAL PRIMARY KEY,
     modulo_id INTEGER NOT NULL REFERENCES modulos(id),
-    titulo VARCHAR(200) NOT NULL,
+    titulo VARCHAR(150) NOT NULL,
     ordem INTEGER NOT NULL,
     duracao_minutos INTEGER CHECK (duracao_minutos >= 0),
     tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('video', 'texto', 'quiz')),
@@ -57,17 +57,52 @@ CREATE TABLE aulas (
 );
 COMMENT ON COLUMN aulas.tipo IS 'Tipo de conteúdo da aula: video, texto ou quiz.';
 
+CREATE TABLE cupons (
+    id SERIAL PRIMARY KEY,
+    codigo VARCHAR(50) UNIQUE NOT NULL,
+    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('percentual', 'fixo')),
+    valor_desconto NUMERIC(10, 2) NOT NULL CHECK (valor_desconto > 0),
+    data_expiracao DATE,
+    uso_maximo INTEGER CHECK (uso_maximo >= 0),
+    usos_atuais INTEGER DEFAULT 0 CHECK (usos_atuais >= 0)
+);
+COMMENT ON TABLE cupons IS 'Gerenciamento de códigos promocionais e regras de desconto.';
+
+CREATE TABLE pedidos (
+    id SERIAL PRIMARY KEY,
+    aluno_id INTEGER NOT NULL REFERENCES alunos(id),
+    data_pedido TIMESTAMP NOT NULL DEFAULT NOW(),
+    cupom_id INTEGER REFERENCES cupons(id),
+    valor_bruto NUMERIC(10, 2) NOT NULL CHECK (valor_bruto >= 0),
+    valor_desconto_aplicado NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (valor_desconto_aplicado >= 0),
+    valor_final NUMERIC(10, 2) NOT NULL CHECK (valor_final >= 0),
+    status_pedido VARCHAR(30) NOT NULL CHECK (status_pedido IN ('pendente_pagamento', 'pago', 'cancelado', 'falha_processamento')),
+    UNIQUE (aluno_id, data_pedido)
+);
+COMMENT ON TABLE pedidos IS 'Representa a fatura (Ordem de Serviço) criada pelo aluno para compra de cursos.';
+
+CREATE TABLE pagamentos (
+    id SERIAL PRIMARY KEY,
+    pedido_id INTEGER NOT NULL REFERENCES pedidos(id),
+    metodo_pagamento VARCHAR(50) NOT NULL CHECK (metodo_pagamento IN ('debito', 'credito', 'pix')),
+    id_transacao_gateway VARCHAR(100) UNIQUE,
+    valor_pago NUMERIC(10, 2) NOT NULL CHECK (valor_pago > 0),
+    data_pagamento TIMESTAMP NOT NULL DEFAULT NOW(),
+    status_transacao VARCHAR(30) NOT NULL CHECK (status_transacao IN ('aprovado', 'falhou', 'estornado', 'pendente'))
+);
+COMMENT ON TABLE pagamentos IS 'Detalhes da transação financeira real para um pedido.';
+
 CREATE TABLE matriculas (
     id SERIAL PRIMARY KEY,
     aluno_id INTEGER NOT NULL REFERENCES alunos(id),
     curso_id INTEGER NOT NULL REFERENCES cursos(id),
+    pedido_id INTEGER NOT NULL REFERENCES pedidos(id),
     data_matricula TIMESTAMP NOT NULL DEFAULT NOW(),
     data_conclusao DATE,
-    istats VARCHAR(20) NOT NULL CHECK (istats IN ('ativa', 'concluida', 'cancelada')),
-    valor_pago NUMERIC(10, 2) NOT NULL,
+    istatus VARCHAR(20) NOT NULL CHECK (istatus IN ('ativa', 'concluida', 'cancelada')),
     UNIQUE (aluno_id, curso_id)
 );
-COMMENT ON TABLE matriculas IS 'Relacionamento N:M entre alunos e cursos, registrando o histórico de compras.';
+COMMENT ON TABLE matriculas IS 'Relacionamento N:M: Registra a liberação de acesso (após pagamento) aos cursos.';
 
 CREATE TABLE progresso_aulas (
     id SERIAL PRIMARY KEY,
