@@ -1,0 +1,26 @@
+# Ambientes virtuais
+venv/
+.venv/
+
+# Arquivos de bytecode e caches
+__pycache__/
+*.pyc
+*.pyo
+
+# Arquivos de log e depuração
+*.log
+*.sqlite3
+
+# Arquivos de ambiente
+.env
+.flaskenv
+
+# Ignora arquivos .csv
+/data/*.csv
+
+# VS Code
+.vscode/
+
+# DBeaver e pgAdmin
+.dbeaver/
+.DS_Store
