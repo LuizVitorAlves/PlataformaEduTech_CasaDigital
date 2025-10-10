@@ -61,7 +61,7 @@ CREATE TABLE cupons (
     id SERIAL PRIMARY KEY,
     codigo VARCHAR(50) UNIQUE NOT NULL,
     tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('percentual', 'fixo')),
-    valor_desconto NUMERIC(10, 2) NOT NULL CHECK (valor_desconto > 0),
+    valor_desconto NUMERIC(5, 2) NOT NULL CHECK (valor_desconto > 0),
     data_expiracao DATE,
     uso_maximo INTEGER CHECK (uso_maximo >= 0),
     usos_atuais INTEGER DEFAULT 0 CHECK (usos_atuais >= 0)
@@ -73,9 +73,9 @@ CREATE TABLE pedidos (
     aluno_id INTEGER NOT NULL REFERENCES alunos(id),
     data_pedido TIMESTAMP NOT NULL DEFAULT NOW(),
     cupom_id INTEGER REFERENCES cupons(id),
-    valor_bruto NUMERIC(10, 2) NOT NULL CHECK (valor_bruto >= 0),
-    valor_desconto_aplicado NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (valor_desconto_aplicado >= 0),
-    valor_final NUMERIC(10, 2) NOT NULL CHECK (valor_final >= 0),
+    valor_bruto NUMERIC(5, 2) NOT NULL CHECK (valor_bruto >= 0),
+    valor_desconto_aplicado NUMERIC(5, 2) NOT NULL DEFAULT 0 CHECK (valor_desconto_aplicado >= 0),
+    valor_final NUMERIC(5, 2) NOT NULL CHECK (valor_final >= 0),
     status_pedido VARCHAR(30) NOT NULL CHECK (status_pedido IN ('pendente_pagamento', 'pago', 'cancelado', 'falha_processamento')),
     UNIQUE (aluno_id, data_pedido)
 );
@@ -86,7 +86,7 @@ CREATE TABLE pagamentos (
     pedido_id INTEGER NOT NULL REFERENCES pedidos(id),
     metodo_pagamento VARCHAR(50) NOT NULL CHECK (metodo_pagamento IN ('debito', 'credito', 'pix')),
     id_transacao_gateway VARCHAR(100) UNIQUE,
-    valor_pago NUMERIC(10, 2) NOT NULL CHECK (valor_pago > 0),
+    valor_pago NUMERIC(5, 2) NOT NULL CHECK (valor_pago > 0),
     data_pagamento TIMESTAMP NOT NULL DEFAULT NOW(),
     status_transacao VARCHAR(30) NOT NULL CHECK (status_transacao IN ('aprovado', 'falhou', 'estornado', 'pendente'))
 );
