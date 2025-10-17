@@ -194,3 +194,52 @@ def gerar_matriculas(dados_pedidos):
             })
             matricula_id_counter += 1
     return matriculas
+
+def gerar_categorias():
+    nomes = ['Programação', 'Design', 'Dados', 'DevOps', 'Negócios', 'Marketing']
+    categorias = []
+    for i, nome in enumerate(nomes, start=1):
+        categorias.append({
+            'id': i,
+            'nome': nome,
+            'descricao': fake.sentence(nb_words=10)
+        })
+    return categorias
+
+def gerar_progresso_aulas(dados_matriculas, dados_aulas):
+    progresso = []
+    progresso_id = 1
+    aulas_por_curso = {}
+    for aula in dados_aulas:
+        aulas_por_curso.setdefault(aula['modulo_id'], []).append(aula)
+
+    for matricula in dados_matriculas:
+        aulas_escolhidas = random.sample(dados_aulas, random.randint(0, len(dados_aulas)))
+        for aula in aulas_escolhidas:
+            concluida = random.random() < 0.7
+            progresso.append({
+                'id': progresso_id,
+                'matricula_id': matricula['id'],
+                'aula_id': aula['id'],
+                'concluida': concluida,
+                'data_conclusao': gerar_data_historica() if concluida else None,
+                'tempo_assistido_minutos': random.randint(0, aula['duracao_minutos']) if concluida else 0
+            })
+            progresso_id += 1
+    return progresso
+
+def gerar_avaliacoes(dados_matriculas, dados_cursos):
+    avaliacoes = []
+    avaliacao_id = 1
+    for matricula in dados_matriculas:
+        if random.random() < 0.6:
+            avaliacoes.append({
+                'id': avaliacao_id,
+                'matricula_id': matricula['id'],
+                'curso_id': matricula['curso_id'],
+                'nota': random.randint(3, 5),
+                'comentario': fake.sentence(nb_words=15),
+                'data_avaliacao': gerar_data_historica()
+            })
+            avaliacao_id += 1
+    return avaliacoes
