@@ -1,5 +1,6 @@
 #!/home/alves/edutech/venv/bin/python
 
+import utils
 import csv
 import random
 import os
@@ -57,3 +58,24 @@ def gerar_cupons(quantidade):
             'usos_atuais': 0
         })
     return cupons
+
+def gerar_cursos(quantidade, instrutores_ids, categorias_ids):
+    cursos = []
+    niveis = ['iniciante', 'intermediario', 'avancado']
+    
+    for i in range(1, quantidade + 1):
+        preco = Decimal(fake.pydecimal(left_digits=3, right_digits=2, min_value=49.90, max_value=499.90)).quantize(Decimal('0.01'))
+        
+        cursos.append({
+            'id': i,
+            'titulo': f'{random.choice(["Masterclass", "Curso Completo", "Guia Essencial"])} de {fake.catch_phrase()}',
+            'descricao': fake.paragraph(nb_sentences=5),
+            'categoria_id': random.choice(categorias_ids),
+            'instrutor_id': random.choice(instrutores_ids),
+            'preco': str(preco),
+            'carga_horaria': random.choice([10, 20, 40, 60, 80, 100]),
+            'nivel': random.choice(niveis),
+            'data_criacao': gerar_data_historica()
+        })
+    return cursos
+
