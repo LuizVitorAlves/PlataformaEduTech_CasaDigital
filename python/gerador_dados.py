@@ -136,8 +136,7 @@ def gerar_pedidos_e_pagamentos(dados_alunos, dados_cursos, dados_cupons, num_ped
             if valor_bruto + preco_curso <= Decimal('999.99'):
                 cursos_do_pedido.append(curso_candidato)
                 valor_bruto += preco_curso
-        if not cursos_do_pedido: 
-            continue
+        if not cursos_do_pedido: continue 
         cupom_fk = None
         valor_desconto = Decimal('0.00')
         if random.random() < 0.20 and cupons_ids:
@@ -157,11 +156,12 @@ def gerar_pedidos_e_pagamentos(dados_alunos, dados_cursos, dados_cupons, num_ped
         }
         pedidos.append(pedido)
         status_pg = random.choices(status_transacao, weights=pesos_transacao, k=1)[0]
+        gateway_id = str(fake.uuid4()) if status_pg == 'aprovado' else None
         pagamento = {
             'id': pagamento_id_counter,
             'pedido_id': pedido_id_counter,
             'metodo_pagamento': random.choice(metodos_pagamento),
-            'id_transacao_gateway': str(fake.uuid4()),
+            'id_transacao_gateway': gateway_id,
             'valor_pago': str(valor_final),
             'data_pagamento': (data_pedido + timedelta(minutes=random.randint(5, 60))).isoformat(),
             'status_transacao': status_pg
@@ -206,40 +206,118 @@ def gerar_categorias():
         })
     return categorias
 
-def gerar_progresso_aulas(dados_matriculas, dados_aulas):
+def gerar_progresso_e_avaliacoes(dados_matriculas, dados_modulos, dados_aulas):
     progresso = []
-    progresso_id = 1
+    avaliacoes = []
+    progresso_id_counter = 1
+    
     aulas_por_curso = {}
+    curso_por_modulo = {m['id']: m['curso_id'] for m in dados_modulos}
+    
     for aula in dados_aulas:
-        aulas_por_curso.setdefault(aula['modulo_id'], []).append(aula)
-
+        if aula['modulo_id'] in curso_por_modulo:
+            curso_id = curso_por_modulo[aula['modulo_id']]
+            aulas_por_curso.setdefault(curso_id, []).append(aula)
+        
     for matricula in dados_matriculas:
-        aulas_escolhidas = random.sample(dados_aulas, random.randint(0, len(dados_aulas)))
-        for aula in aulas_escolhidas:
-            concluida = random.random() < 0.7
+        curso_id = matricula['curso_id']
+        aulas_validas = aulas_por_curso.get(curso_id, [])
+        if not aulas_validas: continue
+        taxa_conclusao = random.uniform(0.10, 1.0)
+        total_aulas = len(aulas_validas)
+        aulas_a_concluir = int(total_aulas * taxa_conclusao)
+        for aula in random.sample(aulas_validas, aulas_a_concluir): 
+            concluida = True
+            data_conclusao_aula = fake.date_time_between(
+                start_date=datetime.fromisoformat(matricula['data_matricula']), 
+                end_date=DATA_MAX_GLOBAL
+            ).isoformat()
             progresso.append({
-                'id': progresso_id,
+                'id': progresso_id_counter,
                 'matricula_id': matricula['id'],
                 'aula_id': aula['id'],
                 'concluida': concluida,
-                'data_conclusao': gerar_data_historica() if concluida else None,
-                'tempo_assistido_minutos': random.randint(0, aula['duracao_minutos']) if concluida else 0
+                'data_conclusao': data_conclusao_aula,
+                'tempo_assistido_minutos': random.randint(aula['duracao_minutos'] - 5, aula['duracao_minutos'])
             })
-            progresso_id += 1
-    return progresso
-
-def gerar_avaliacoes(dados_matriculas, dados_cursos):
-    avaliacoes = []
-    avaliacao_id = 1
-    for matricula in dados_matriculas:
-        if random.random() < 0.6:
+            progresso_id_counter += 1
+        if taxa_conclusao >= 0.50 and random.random() < 0.25:
             avaliacoes.append({
-                'id': avaliacao_id,
-                'matricula_id': matricula['id'],
+                'id': len(avaliacoes) + 1,
+                'matricula_id': matricula['id'], 
                 'curso_id': matricula['curso_id'],
                 'nota': random.randint(3, 5),
                 'comentario': fake.sentence(nb_words=15),
                 'data_avaliacao': gerar_data_historica()
             })
-            avaliacao_id += 1
-    return avaliacoes
+        if taxa_conclusao >= 0.99:
+            matricula['status'] = 'concluida'
+            matricula['data_conclusao'] = data_conclusao_aula.split('T')[0]
+    return progresso, avaliacoes
+
+def executar_gerador_cli():
+    print("Bem vindo a Plataforma EduTech! Vamos gerar seus dados?\n")
+
+    QTD_ALUNOS = obter_quantidade("alunos", 30)
+    QTD_INSTRUTORES = obter_quantidade("instrutores", 10)
+    QTD_CATEGORIAS = obter_quantidade("categorias", 5)
+    QTD_CURSOS = obter_quantidade("cursos", 20)
+    QTD_CUPONS = obter_quantidade("cupons", 5)
+    QTD_PEDIDOS = obter_quantidade("pedidos", 80) 
+    
+    print("\nLoading alunos...")
+    dados_alunos = gerar_alunos(QTD_ALUNOS)
+    exportar_para_csv(dados_alunos, 'alunos')
+    
+    print("\nLoading instrutores...")
+    dados_instrutores = gerar_instrutores(QTD_INSTRUTORES)
+    exportar_para_csv(dados_instrutores, 'instrutores')
+    
+    print("\nLoading categorias...")
+    dados_categorias = gerar_categorias(QTD_CATEGORIAS)
+    exportar_para_csv(dados_categorias, 'categorias')
+    
+    print("\nLoading cupons...")
+    dados_cupons = gerar_cupons(QTD_CUPONS)
+    exportar_para_csv(dados_cupons, 'cupons')
+
+    instrutores_ids = [i['id'] for i in dados_instrutores]
+    categorias_ids = [c['id'] for c in dados_categorias]
+    
+    print("\nLoading cursos...")
+    dados_cursos = gerar_cursos(QTD_CURSOS, instrutores_ids, categorias_ids)
+    exportar_para_csv(dados_cursos, 'cursos')
+
+    print("\nLoading modulos...")
+    print("\nLoading aulas...")
+    dados_modulos, dados_aulas = gerar_modulos_e_aulas(dados_cursos)
+    exportar_para_csv(dados_modulos, 'modulos')
+    exportar_para_csv(dados_aulas, 'aulas')
+
+    print("\nLoading pedidos...")
+    print("\nLoading pagamentos...")
+    dados_pedidos, dados_pagamentos = gerar_pedidos_e_pagamentos(
+        dados_alunos, dados_cursos, dados_cupons, QTD_PEDIDOS
+    )
+    exportar_para_csv(dados_pedidos, 'pedidos')
+    exportar_para_csv(dados_pagamentos, 'pagamentos')
+
+    print("\nLoading matriculas...")
+    dados_matriculas = gerar_matriculas(dados_pedidos)
+    exportar_para_csv(dados_matriculas, 'matriculas')
+    
+    print("\nLoading matriculas concluidas...")
+    print("\nLoading progresso de aulas...")
+    print("\nLoading avaliações...")
+    dados_progresso, dados_avaliacoes = gerar_progresso_e_avaliacoes(
+        dados_matriculas, dados_modulos, dados_aulas
+    )
+    exportar_para_csv(dados_matriculas, 'matriculas') 
+    exportar_para_csv(dados_progresso, 'progresso_aulas')
+    exportar_para_csv(dados_avaliacoes, 'avaliacoes')
+
+    print("🎉 Geração de Todos os CSVs Concluída!")
+
+
+if __name__ == '__main__':
+    executar_gerador_cli()
