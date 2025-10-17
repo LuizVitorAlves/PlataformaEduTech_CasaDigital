@@ -176,23 +176,28 @@ def gerar_pedidos_e_pagamentos(dados_alunos, dados_cursos, dados_cupons, num_ped
 def gerar_matriculas(dados_pedidos):
     matriculas = []
     matricula_id_counter = 1
-    
     pedidos_pagos = [p for p in dados_pedidos if p['status_pedido'] == 'pago']
-
+    
+    combinacoes_unicas = set() 
     for pedido in pedidos_pagos:
         data_pedido_dt = datetime.fromisoformat(pedido['data_pedido'])
         data_matricula = (data_pedido_dt + timedelta(minutes=random.randint(65, 120))).isoformat()
         for curso in pedido['cursos_comprados']: 
-            matriculas.append({
-                'id': matricula_id_counter,
-                'aluno_id': pedido['aluno_id'],
-                'curso_id': curso['id'],
-                'pedido_id': pedido['id'],
-                'data_matricula': data_matricula,
-                'data_conclusao': None, 
-                'status': 'ativa'
-            })
-            matricula_id_counter += 1
+            aluno_id = pedido['aluno_id']
+            curso_id = curso['id']
+            chave_unica = (aluno_id, curso_id)
+            if chave_unica not in combinacoes_unicas:
+                matriculas.append({
+                    'id': matricula_id_counter,
+                    'aluno_id': aluno_id,
+                    'curso_id': curso_id,
+                    'pedido_id': pedido['id'],
+                    'data_matricula': data_matricula,
+                    'data_conclusao': None, 
+                    'status': 'ativa'
+                })
+                combinacoes_unicas.add(chave_unica)
+                matricula_id_counter += 1
     return matriculas
 
 def gerar_categorias(quantidade):
@@ -239,7 +244,7 @@ def gerar_progresso_e_avaliacoes(dados_matriculas, dados_modulos, dados_aulas):
                 'aula_id': aula['id'],
                 'concluida': concluida,
                 'data_conclusao': data_conclusao_aula,
-                'tempo_assistido_minutos': random.randint(aula['duracao_minutos'] - 5, aula['duracao_minutos'])
+                'tempo_assistido_minutos': max(0, random.randint(aula['duracao_minutos'] - 5, aula['duracao_minutos'])),
             })
             progresso_id_counter += 1
         if taxa_conclusao >= 0.50 and random.random() < 0.25:
@@ -300,7 +305,8 @@ def executar_gerador_cli():
     dados_pedidos, dados_pagamentos = gerar_pedidos_e_pagamentos(
         dados_alunos, dados_cursos, dados_cupons, QTD_PEDIDOS
     )
-    exportar_para_csv(dados_pedidos, 'pedidos')
+    pedidos_para_export = [{k: v for k, v in p.items() if k != 'cursos_comprados'} for p in dados_pedidos]
+    exportar_para_csv(pedidos_para_export, 'pedidos')
     exportar_para_csv(dados_pagamentos, 'pagamentos')
 
     print("\nLoading matriculas...")

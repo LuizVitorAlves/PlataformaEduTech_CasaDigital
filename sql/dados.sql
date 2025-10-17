@@ -7,12 +7,12 @@
 \COPY modulos FROM 'data/modulos.csv' DELIMITER ',' CSV HEADER;
 \COPY aulas FROM 'data/aulas.csv' DELIMITER ',' CSV HEADER;
 
-\COPY pedidos FROM 'data/pedidos.csv' DELIMITER ',' CSV HEADER NULL 'None';
-\COPY pagamentos FROM 'data/pagamentos.csv' DELIMITER ',' CSV HEADER NULL 'None';
+\COPY pedidos FROM 'data/pedidos.csv' DELIMITER ',' CSV HEADER NULL '';
+\COPY pagamentos FROM 'data/pagamentos.csv' DELIMITER ',' CSV HEADER NULL '';
 
-\COPY matriculas FROM 'data/matriculas.csv' DELIMITER ',' CSV HEADER NULL 'None';
-\COPY progresso_aulas FROM 'data/progresso_aulas.csv' DELIMITER ',' CSV HEADER NULL 'None';
-\COPY avaliacoes FROM 'data/avaliacoes.csv' DELIMITER ',' CSV HEADER NULL 'None';
+\COPY matriculas FROM 'data/matriculas.csv' DELIMITER ',' CSV HEADER NULL '';
+\COPY progresso_aulas FROM 'data/progresso_aulas.csv' DELIMITER ',' CSV HEADER NULL '';
+\COPY avaliacoes FROM 'data/avaliacoes.csv' DELIMITER ',' CSV HEADER NULL '';
 
 SELECT setval('alunos_id_seq', (SELECT max(id) FROM alunos), true);
 SELECT setval('instrutores_id_seq', (SELECT max(id) FROM instrutores), true);

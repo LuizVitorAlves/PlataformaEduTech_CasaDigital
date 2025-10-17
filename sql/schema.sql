@@ -99,7 +99,7 @@ CREATE TABLE matriculas (
     pedido_id INTEGER NOT NULL REFERENCES pedidos(id),
     data_matricula TIMESTAMP NOT NULL DEFAULT NOW(),
     data_conclusao DATE,
-    istatus VARCHAR(20) NOT NULL CHECK (istatus IN ('ativa', 'concluida', 'cancelada')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('ativa', 'concluida', 'cancelada')),
     UNIQUE (aluno_id, curso_id)
 );
 COMMENT ON TABLE matriculas IS 'Relacionamento N:M: Registra a liberação de acesso (após pagamento) aos cursos.';
