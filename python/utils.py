@@ -5,22 +5,30 @@ import os
 import sys
 
 def obter_quantidade(nome_entidade, padrao):
+    LIMITE_CATEGORIAS = 10 
+    
     while True:
         try:
             if sys.stdin.isatty():
-                entrada = input(f"Quantos {nome_entidade} deseja gerar (Padrão: {padrao})? ")
+                prompt_limite = ""
+                if nome_entidade == "categorias":
+                    prompt_limite = f" (Máx: {LIMITE_CATEGORIAS})"
+                entrada = input(f"Quantos {nome_entidade} deseja gerar (Padrão: {padrao}){prompt_limite}? ")
             else:
-                entrada = ""
+                return padrao 
             if not entrada:
                 return padrao
             quantidade = int(entrada)
             if quantidade < 0:
-                print("A quantidade deve ser não-negativa. Usando o padrão.")
+                print("ERRO: A quantidade deve ser não-negativa. Usando o padrão.")
                 return padrao
+            if nome_entidade == "categorias" and quantidade > LIMITE_CATEGORIAS:
+                print(f"ERRO: O catálogo só permite no máximo {LIMITE_CATEGORIAS} categorias. Usando {LIMITE_CATEGORIAS}.")
+                return LIMITE_CATEGORIAS
             return quantidade
         except ValueError:
-            print("Entrada inválida. Usando o padrão.")
-            return padrao
+            print("ERRO: Entrada inválida. Por favor, digite um número inteiro.")
+            continue
 
 def exportar_para_csv(data, nome_arquivo):
     if not data:
