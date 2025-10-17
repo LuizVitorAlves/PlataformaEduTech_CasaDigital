@@ -195,13 +195,14 @@ def gerar_matriculas(dados_pedidos):
             matricula_id_counter += 1
     return matriculas
 
-def gerar_categorias():
-    nomes = ['Programação', 'Design', 'Dados', 'DevOps', 'Negócios', 'Marketing']
+def gerar_categorias(quantidade):
+    nomes_base = ['Programação', 'Design', 'Dados', 'DevOps', 'Negócios', 'Marketing', 'Finanças', 'Idiomas', 'Culinária', 'Fotografia']
     categorias = []
-    for i, nome in enumerate(nomes, start=1):
+    num_a_gerar = min(quantidade, len(nomes_base)) 
+    for i in range(1, num_a_gerar + 1):
         categorias.append({
             'id': i,
-            'nome': nome,
+            'nome': nomes_base[i-1], 
             'descricao': fake.sentence(nb_words=10)
         })
     return categorias
