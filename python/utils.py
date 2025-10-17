@@ -20,7 +20,7 @@ def obter_quantidade(nome_entidade, padrao):
                 return padrao
             quantidade = int(entrada)
             if quantidade < 0:
-                print("ERRO: A quantidade deve ser não-negativa. Usando o padrão.")
+                print("ERRO: A quantidade deve ser positiva. Usando o padrão.")
                 return padrao
             if nome_entidade == "categorias" and quantidade > LIMITE_CATEGORIAS:
                 print(f"ERRO: O catálogo só permite no máximo {LIMITE_CATEGORIAS} categorias. Usando {LIMITE_CATEGORIAS}.")
@@ -34,7 +34,6 @@ def exportar_para_csv(data, nome_arquivo):
     if not data:
         print(f"Alerta: Não há dados para exportar em {nome_arquivo}.")
         return
-    os.makedirs('data', exist_ok=True)
     fieldnames = list(data[0].keys())
     caminho_arquivo = f'./data/{nome_arquivo}.csv'
     try:
