@@ -6,7 +6,7 @@ CACHE_DIRS = python/__pycache__
 
 .PHONY: all data clean setup
 all: data
-	@echo "✨ Execução principal concluída. Use 'make clean' para limpar."
+	@echo "✨ Execução principal concluída. Use 'make clean' para limpar os arquivos CSV."
 data:
 	@echo "--- 🚀 INICIANDO GERAÇÃO DE DADOS EDUTECH ---"
 	$(PYTHON_VENV) $(GENERATOR)
