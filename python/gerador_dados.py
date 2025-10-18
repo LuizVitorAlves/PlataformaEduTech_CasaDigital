@@ -23,7 +23,7 @@ def gerar_alunos(quantidade):
         alunos.append({
             'id': i,
             'nome': nome_completo,
-            'email': fake.unique.email(),
+            'email': nome_completo.lower().replace(' ', '.') + "@gmail.com",
             'data_nascimento': fake.date_of_birth(minimum_age=18, maximum_age=60).strftime('%Y-%m-%d'),
             'data_cadastro': gerar_data_historica()
         })

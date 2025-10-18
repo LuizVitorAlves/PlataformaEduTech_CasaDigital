@@ -1,3 +1,6 @@
+\set CURSO_ID_TESTE 3
+\set NOME_CURSO_EXIBICAO (SELECT titulo FROM cursos WHERE id = :CURSO_ID_TESTE)
+
 -- 1. Listar todos os cursos com nome da categoria e do instrutor.
 \echo '---------------------------------------------------'
 \echo 'CONSULTA 1: Cursos, Instrutor e Categoria'
@@ -16,3 +19,20 @@ JOIN
     categorias cat ON c.categoria_id = cat.id
 ORDER BY
     c.data_criacao DESC;
+
+-- 2. Listar todos os alunos matriculados em um curso específico.
+\echo '---------------------------------------------------'
+\echo 'CONSULTA 2: Alunos Matriculados no Curso: '
+\echo '---------------------------------------------------'
+SELECT
+    a.nome AS "Nome do Aluno",
+    a.email,
+    m.data_matricula
+FROM
+    alunos a
+JOIN
+    matriculas m ON a.id = m.aluno_id
+WHERE
+    m.curso_id = :CURSO_ID_TESTE
+ORDER BY
+    m.data_matricula;
