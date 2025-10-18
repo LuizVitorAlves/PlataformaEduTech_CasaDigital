@@ -36,3 +36,26 @@ WHERE
     m.curso_id = :CURSO_ID_TESTE
 ORDER BY
     m.data_matricula;
+
+-- 3. Exibir todas as aulas de um curso ordenadas por módulo e ordem.
+\echo '---------------------------------------------------'
+\echo 'CONSULTA 3: Aulas Ordenadas do Curso: '
+\echo '---------------------------------------------------'
+SELECT
+    m.ordem AS "Módulo Ordem",
+    m.titulo AS "Módulo",
+    a.ordem AS "Aula Ordem",
+    a.titulo AS "Aula",
+    a.tipo,
+    a.duracao_minutos || ' min' AS "Duração"
+FROM
+    cursos c
+JOIN
+    modulos m ON c.id = m.curso_id
+JOIN
+    aulas a ON m.id = a.modulo_id
+WHERE
+    c.id = :CURSO_ID_TESTE
+ORDER BY
+    m.ordem ASC,
+    a.ordem ASC;
