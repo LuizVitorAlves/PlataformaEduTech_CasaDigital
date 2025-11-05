@@ -133,3 +133,60 @@ ORDER BY
     "Total de Matrículas Ativas" DESC
 LIMIT 1;
 
+-- 8. Listar alunos, cursos matriculados e porcentagem de conclusão
+\echo '\n---------------------------------------------------'
+\echo 'CONSULTA 8: Progresso dos Alunos por Curso (com CTEs)'
+\echo '---------------------------------------------------\n'
+
+-- CTE 1: Contar o total de aulas de cada curso
+WITH TotalAulasPorCurso AS (
+    SELECT
+        c.id AS curso_id,
+        COUNT(a.id) AS total_aulas
+    FROM
+        cursos c
+    JOIN
+        modulos m ON c.id = m.curso_id
+    JOIN
+        aulas a ON m.id = a.modulo_id
+    GROUP BY
+        c.id
+),
+
+-- CTE 2: Contar quantas aulas foram concluídas por cada matrícula
+AulasConcluidasPorMatricula AS (
+    SELECT
+        pa.matricula_id,
+        COUNT(pa.id) AS aulas_concluidas
+    FROM
+        progresso_aulas pa
+    WHERE
+        pa.concluida = TRUE 
+    GROUP BY
+        pa.matricula_id
+)
+
+-- Principal que é juntar tudo
+SELECT
+    al.nome AS "Aluno",
+    c.titulo AS "Curso",
+    COALESCE(ac.aulas_concluidas, 0) AS "Aulas Concluídas",
+    ta.total_aulas AS "Total de Aulas",
+    TO_CHAR(
+        (COALESCE(ac.aulas_concluidas, 0) * 100.0) / ta.total_aulas,
+        '990.99'
+    ) || '%' AS "Progresso"
+FROM
+    matriculas m
+JOIN
+    alunos al ON m.aluno_id = al.id
+JOIN
+    cursos c ON m.curso_id = c.id
+JOIN
+    TotalAulasPorCurso ta ON c.id = ta.curso_id
+LEFT JOIN
+    AulasConcluidasPorMatricula ac ON m.id = ac.matricula_id
+WHERE
+    ta.total_aulas > 0
+ORDER BY
+    al.nome, "Progresso" DESC;
