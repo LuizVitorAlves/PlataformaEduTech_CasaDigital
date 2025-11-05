@@ -91,3 +91,25 @@ GROUP BY
     c.id, c.titulo
 ORDER BY
     "Total de Alunos Matriculados" DESC;
+
+-- 6. Calcular o faturamento total por categoria
+\echo '\n---------------------------------------------------'
+\echo 'CONSULTA 6: Faturamento Bruto por Categoria'
+\echo '---------------------------------------------------\n'
+SELECT
+    cat.nome AS "Categoria",
+    TO_CHAR(SUM(c.preco), 'L99G999D99') AS "Faturamento Bruto Gerado"
+FROM
+    categorias cat
+JOIN
+    cursos c ON cat.id = c.categoria_id
+JOIN
+    matriculas m ON c.id = m.curso_id
+JOIN
+    pedidos ped ON m.pedido_id = ped.id
+WHERE
+    ped.status_pedido = 'pago'
+GROUP BY
+    cat.nome
+ORDER BY
+    SUM(c.preco) DESC;
