@@ -113,3 +113,23 @@ GROUP BY
     cat.nome
 ORDER BY
     SUM(c.preco) DESC;
+
+-- 7. Identificar o curso com maior número de matrículas ativas
+\echo '\n---------------------------------------------------'
+\echo 'CONSULTA 7: Curso com Mais Matrículas Ativas'
+\echo '---------------------------------------------------\n'
+SELECT
+    c.titulo AS "Curso",
+    COUNT(m.id) AS "Total de Matrículas Ativas"
+FROM
+    cursos c
+JOIN
+    matriculas m ON c.id = m.curso_id
+WHERE
+    m.status = 'ativa'
+GROUP BY
+    c.id, c.titulo
+ORDER BY
+    "Total de Matrículas Ativas" DESC
+LIMIT 1;
+
